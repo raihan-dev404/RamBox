@@ -1,0 +1,19 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Same dark gradient as the icon image, so the circle is filled edge to edge. -->
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="54" android:startY="0"
+                android:endX="54" android:endY="108"
+                android:type="linear">
+                <item android:color="#1B1B24" android:offset="0.0" />
+                <item android:color="#0E0E13" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>
