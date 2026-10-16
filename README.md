@@ -29,10 +29,6 @@
 
 ---
 
-<div align="center">
-
-<img src="Banner.png" alt="RamBox banner" width="100%" />
-
 <h1><a id="features"></a>Features</h1>
 
 <table>
