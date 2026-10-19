@@ -15,12 +15,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import rambox.desktopapp.generated.resources.Res
 import rambox.desktopapp.generated.resources.logo
 import java.awt.Dimension
+import java.awt.GraphicsEnvironment
 import java.awt.Rectangle
 import java.awt.Toolkit
 import kotlin.math.roundToInt
@@ -70,7 +73,15 @@ private fun desktopMain() = application {
     // Closing puts the window away rather than ending the process, while there is a tray icon to
     // bring it back from — see [DesktopWindowVisibility].
     val visible by DesktopWindowVisibility.visible.collectAsState()
-    val state = rememberWindowState(width = 1_220.dp, height = 780.dp)
+    // Open at 1220x780dp, but never bigger than the screen's usable area (the part not under the
+    // taskbar). On a 1080p laptop at 150% scaling only ~690dp of height is free, so a fixed 780dp
+    // window used to hang off the bottom of the screen.
+    val openingSizeDp = remember { fittedOpeningSize() }
+    val state = rememberWindowState(
+        position = WindowPosition.Aligned(Alignment.Center),
+        width = openingSizeDp.first.dp,
+        height = openingSizeDp.second.dp,
+    )
     LaunchedEffect(visible) {
         if (visible && state.isMinimized) {
             state.isMinimized = false
@@ -181,6 +192,27 @@ private fun desktopMain() = application {
         ) {
             RamBoxDesktopApp()
         }
+    }
+}
+
+/**
+ * The opening window size in dp: 1220x780, shrunk to 92% of the screen's usable area when the
+ * screen is smaller. AWT sizes here are device pixels (see the minimum-size code below), so they
+ * are divided by the display scale to get dp. Falls back to the old fixed size if it can't tell.
+ */
+private fun fittedOpeningSize(): Pair<Float, Float> {
+    val wanted = 1_220f to 780f
+    return try {
+        val env = GraphicsEnvironment.getLocalGraphicsEnvironment()
+        val bounds = env.maximumWindowBounds
+        val scale = env.defaultScreenDevice.defaultConfiguration.defaultTransform
+        val availW = bounds.width / scale.scaleX.toFloat() * 0.92f
+        val availH = bounds.height / scale.scaleY.toFloat() * 0.92f
+        val w = minOf(wanted.first, availW).coerceAtLeast(MIN_WINDOW_WIDTH_DP.toFloat())
+        val h = minOf(wanted.second, availH).coerceAtLeast(MIN_WINDOW_HEIGHT_DP.toFloat())
+        w to h
+    } catch (e: Throwable) {
+        wanted
     }
 }
 
